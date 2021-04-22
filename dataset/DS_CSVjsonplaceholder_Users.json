@@ -1,0 +1,22 @@
+{
+	"name": "DS_CSVjsonplaceholder_Users",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABS_jsonplaceholder",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "csv"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": false,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
