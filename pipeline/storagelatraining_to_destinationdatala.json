@@ -1,0 +1,8 @@
+{
+	"name": "storagelatraining_to_destinationdatala",
+	"properties": {
+		"description": "test copy file from storagelatraining to destinationdatala",
+		"concurrency": 1,
+		"annotations": []
+	}
+}
