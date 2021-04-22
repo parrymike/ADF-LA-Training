@@ -1,0 +1,18 @@
+{
+	"name": "DS_JSON_jsonplaceholder_Users",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABS_jsonplaceholder",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"container": "json"
+			}
+		},
+		"schema": {}
+	}
+}

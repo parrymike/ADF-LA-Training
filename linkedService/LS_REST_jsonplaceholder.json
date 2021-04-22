@@ -1,0 +1,13 @@
+{
+	"name": "LS_REST_jsonplaceholder",
+	"properties": {
+		"description": "fake REST API for testing",
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://jsonplaceholder.typicode.com/",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}

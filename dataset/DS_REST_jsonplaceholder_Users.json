@@ -1,0 +1,16 @@
+{
+	"name": "DS_REST_jsonplaceholder_Users",
+	"properties": {
+		"description": "Test dataset for user data",
+		"linkedServiceName": {
+			"referenceName": "LS_REST_jsonplaceholder",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": "users/"
+		},
+		"schema": []
+	}
+}
