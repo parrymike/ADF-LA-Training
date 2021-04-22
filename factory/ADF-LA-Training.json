@@ -1,0 +1,9 @@
+{
+	"name": "ADF-LA-Training",
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "9bf48108-b1bc-4cb7-956f-5236f31bbdf2",
+		"tenantId": "b024cacf-dede-4241-a15c-3c97d553e9f3"
+	}
+}
