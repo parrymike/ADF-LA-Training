@@ -27,7 +27,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "RestResource1",
+						"referenceName": "DS_REST_jsonplaceholder_Users",
 						"type": "DatasetReference"
 					}
 				]
