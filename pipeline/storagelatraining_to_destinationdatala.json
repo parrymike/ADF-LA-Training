@@ -15,7 +15,16 @@
 					"secureOutput": false,
 					"secureInput": false
 				},
-				"userProperties": [],
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "users/"
+					},
+					{
+						"name": "Destination",
+						"value": "//"
+					}
+				],
 				"typeProperties": {
 					"source": {
 						"type": "RestSource",
@@ -23,11 +32,27 @@
 						"requestInterval": "00.00:00:00.010",
 						"requestMethod": "GET"
 					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"maxConcurrentConnections": 1
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
 					"enableStaging": false
 				},
 				"inputs": [
 					{
 						"referenceName": "DS_REST_jsonplaceholder_Users",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_JSON_jsonplaceholder_Users",
 						"type": "DatasetReference"
 					}
 				]
