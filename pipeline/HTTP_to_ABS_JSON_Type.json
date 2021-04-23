@@ -262,7 +262,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"data_type": {
-								"value": "@variables('data_type')",
+								"value": "@pipeline().parameters.data_type",
 								"type": "Expression"
 							}
 						}
