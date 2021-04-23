@@ -6,10 +6,23 @@
 			"referenceName": "LS_REST_jsonplaceholder",
 			"type": "LinkedServiceReference"
 		},
+		"parameters": {
+			"_page": {
+				"type": "string",
+				"defaultValue": "0"
+			},
+			"_limit": {
+				"type": "string",
+				"defaultValue": "2"
+			}
+		},
 		"annotations": [],
 		"type": "RestResource",
 		"typeProperties": {
-			"relativeUrl": "users/"
+			"relativeUrl": {
+				"value": "@concat('users/_page=',dataset()._page,'&_limit=',dataset()._limit)",
+				"type": "Expression"
+			}
 		},
 		"schema": []
 	}
