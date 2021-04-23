@@ -1,7 +1,7 @@
 {
 	"name": "Users_HTTP_to_ABS_JSON",
 	"properties": {
-		"description": "Copy users data to blob storage",
+		"description": "Copy users data to blob storage by page",
 		"activities": [
 			{
 				"name": "Copy Users from HTTP to ADS",
