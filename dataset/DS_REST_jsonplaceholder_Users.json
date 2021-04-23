@@ -9,7 +9,7 @@
 		"parameters": {
 			"_page": {
 				"type": "string",
-				"defaultValue": "0"
+				"defaultValue": "1"
 			},
 			"_limit": {
 				"type": "string",
