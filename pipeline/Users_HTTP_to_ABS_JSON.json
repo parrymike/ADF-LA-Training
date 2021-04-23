@@ -4,28 +4,10 @@
 		"description": "Copy all User JSON data to ABS",
 		"activities": [
 			{
-				"name": "set page",
-				"description": "current results page",
-				"type": "SetVariable",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "page",
-					"value": "1"
-				}
-			},
-			{
 				"name": "set page size",
 				"description": "set no of users per page",
 				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "set page",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
 					"variableName": "page_size",
@@ -71,7 +53,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(variables('page'),variables('max_pages'))",
+						"value": "@greaterOrEquals(int(variables('page')),variables('max_pages'))",
 						"type": "Expression"
 					},
 					"activities": [
