@@ -1,0 +1,68 @@
+{
+	"name": "HTTP_to_ABS_JSON_AllData",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEachDataType",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('Data_Types')",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Get_DataType_data",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "HTTP_to_ABS_JSON_Type",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"page_size": {
+										"value": "@pipeline().parameters.page_size",
+										"type": "Expression"
+									},
+									"max_pages": {
+										"value": "@pipeline().parameters.max_pages",
+										"type": "Expression"
+									},
+									"data_type": {
+										"value": "@variables('Data_Types')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"page_size": {
+				"type": "int",
+				"defaultValue": 2
+			},
+			"max_pages": {
+				"type": "int",
+				"defaultValue": 2
+			}
+		},
+		"variables": {
+			"Data_Types": {
+				"type": "Array",
+				"defaultValue": [
+					"users",
+					"posts"
+				]
+			}
+		},
+		"annotations": []
+	}
+}
