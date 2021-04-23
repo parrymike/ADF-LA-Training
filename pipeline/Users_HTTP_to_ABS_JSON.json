@@ -4,7 +4,7 @@
 		"description": "Copy all User JSON data to ABS",
 		"activities": [
 			{
-				"name": "set page",
+				"name": "set page again",
 				"description": "current results page",
 				"type": "SetVariable",
 				"dependsOn": [],
@@ -15,12 +15,12 @@
 				}
 			},
 			{
-				"name": "set page size",
+				"name": "set page size again",
 				"description": "set no of users per page",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "set page",
+						"activity": "set page again",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -41,7 +41,7 @@
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "set page size",
+						"activity": "set page size again",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -60,7 +60,14 @@
 				"name": "until max pages",
 				"description": "loop until max page limit reached",
 				"type": "Until",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "set max pages",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
@@ -88,6 +95,46 @@
 										"value": "@variables('page_size')",
 										"type": "Expression"
 									}
+								}
+							}
+						},
+						{
+							"name": "set temp page",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Users_HTTP_to_ABS_JSON_by_page",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "temp_page",
+								"value": {
+									"value": "@variables('page')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "set page",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "set temp page",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "page",
+								"value": {
+									"value": "@add(int(variables('temp_page')),1)",
+									"type": "Expression"
 								}
 							}
 						}
@@ -118,6 +165,9 @@
 			"max_pages": {
 				"type": "String",
 				"defaultValue": "1"
+			},
+			"temp_page": {
+				"type": "String"
 			}
 		},
 		"annotations": []
