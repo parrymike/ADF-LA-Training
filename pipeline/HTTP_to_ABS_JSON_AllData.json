@@ -12,6 +12,7 @@
 						"value": "@variables('Data_Types')",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"activities": [
 						{
 							"name": "Get_DataType_data",
@@ -34,7 +35,7 @@
 										"type": "Expression"
 									},
 									"data_type": {
-										"value": "@variables('Data_Types')",
+										"value": "@item()",
 										"type": "Expression"
 									}
 								}
