@@ -5,7 +5,7 @@
 		"annotations": [],
 		"type": "RestService",
 		"typeProperties": {
-			"url": "https://jsonplaceholder.typicode.com/",
+			"url": "https://jsonplaceholder..cypress.io/",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
