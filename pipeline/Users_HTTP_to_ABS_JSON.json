@@ -84,8 +84,8 @@
 										"value": "@variables('page_size')",
 										"type": "Expression"
 									},
-									"type": {
-										"value": "@variables('type')",
+									"data_type": {
+										"value": "@variables('data_type')",
 										"type": "Expression"
 									}
 								}
@@ -185,8 +185,8 @@
 						"referenceName": "DS_JSON_jsonplaceholder",
 						"type": "DatasetReference",
 						"parameters": {
-							"type": {
-								"value": "@variables('type')",
+							"data_type": {
+								"value": "@variables('data_type')",
 								"type": "Expression"
 							}
 						}
@@ -197,8 +197,8 @@
 						"referenceName": "DS_JSON_jsonplaceholder",
 						"type": "DatasetReference",
 						"parameters": {
-							"type": {
-								"value": "@{variables('type')}/merged/",
+							"data_type": {
+								"value": "@{variables('data_type')}/merged/",
 								"type": "Expression"
 							}
 						}
@@ -255,8 +255,8 @@
 						"referenceName": "DS_JSON_jsonplaceholder",
 						"type": "DatasetReference",
 						"parameters": {
-							"type": {
-								"value": "@variables('type')",
+							"data_type": {
+								"value": "@variables('data_type')",
 								"type": "Expression"
 							}
 						}
@@ -296,7 +296,7 @@
 			"temp_page": {
 				"type": "String"
 			},
-			"type": {
+			"data_type": {
 				"type": "String",
 				"defaultValue": "users"
 			}
