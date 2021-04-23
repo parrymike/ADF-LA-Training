@@ -69,12 +69,12 @@
 								},
 								"waitOnCompletion": true,
 								"parameters": {
-									"_page": {
-										"value": "@int(variables('page'))",
+									"page": {
+										"value": "@variables('page')",
 										"type": "Expression"
 									},
-									"_limit": {
-										"value": "@int(variables('page_size'))",
+									"limit": {
+										"value": "@variables('page_size')",
 										"type": "Expression"
 									}
 								}
@@ -123,6 +123,64 @@
 					],
 					"timeout": "7.00:00:00"
 				}
+			},
+			{
+				"name": "merge user files",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "until max pages",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.json",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"dataIntegrationUnits": 2
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_JSON_jsonplaceholder_Users",
+						"type": "DatasetReference"
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_JSON_jsonplaceholder_Users",
+						"type": "DatasetReference"
+					}
+				]
 			}
 		],
 		"parameters": {
