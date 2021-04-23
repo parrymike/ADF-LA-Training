@@ -71,7 +71,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"pipeline": {
-									"referenceName": "Users_HTTP_to_ABS_JSON_by_page",
+									"referenceName": "HTTP_to_ABS_JSON_by_page",
 									"type": "PipelineReference"
 								},
 								"waitOnCompletion": true,
@@ -82,6 +82,10 @@
 									},
 									"limit": {
 										"value": "@variables('page_size')",
+										"type": "Expression"
+									},
+									"type": {
+										"value": "@variables('type')",
 										"type": "Expression"
 									}
 								}
@@ -273,6 +277,10 @@
 			},
 			"temp_page": {
 				"type": "String"
+			},
+			"type": {
+				"type": "String",
+				"defaultValue": "users"
 			}
 		},
 		"annotations": []
