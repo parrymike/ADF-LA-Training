@@ -53,7 +53,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(int(variables('page')),int(variables('max_pages')))",
+						"value": "@greater(int(variables('page')),int(variables('max_pages')))",
 						"type": "Expression"
 					},
 					"activities": [
