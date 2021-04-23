@@ -15,7 +15,7 @@
 				"type": "string",
 				"defaultValue": "2"
 			},
-			"type": {
+			"data_type": {
 				"type": "string",
 				"defaultValue": "users"
 			}
@@ -24,7 +24,7 @@
 		"type": "RestResource",
 		"typeProperties": {
 			"relativeUrl": {
-				"value": "@{dataset().type}?_page=@{dataset().page}&_limit=@{dataset().limit}",
+				"value": "@{dataset().data_type}?_page=@{dataset().page}&_limit=@{dataset().limit}",
 				"type": "Expression"
 			}
 		},
