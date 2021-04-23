@@ -1,10 +1,10 @@
 {
-	"name": "Users_HTTP_to_ABS_JSON_by_page",
+	"name": "HTTP_to_ABS_JSON_by_page",
 	"properties": {
-		"description": "Copy users data to blob storage by page",
+		"description": "Copy data to blob storage by page",
 		"activities": [
 			{
-				"name": "Copy Users from HTTP to ADS",
+				"name": "Copy data from HTTP to ADS",
 				"type": "Copy",
 				"dependsOn": [],
 				"policy": {
@@ -46,7 +46,7 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "DS_REST_jsonplaceholder_Users",
+						"referenceName": "DS_REST_jsonplaceholder",
 						"type": "DatasetReference",
 						"parameters": {
 							"page": {
@@ -56,14 +56,24 @@
 							"limit": {
 								"value": "@pipeline().parameters.limit",
 								"type": "Expression"
+							},
+							"type": {
+								"value": "@pipeline().parameters.type",
+								"type": "Expression"
 							}
 						}
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_JSON_jsonplaceholder_Users",
-						"type": "DatasetReference"
+						"referenceName": "DS_JSON_jsonplaceholder",
+						"type": "DatasetReference",
+						"parameters": {
+							"type": {
+								"value": "@pipeline().parameters.type",
+								"type": "Expression"
+							}
+						}
 					}
 				]
 			}
@@ -77,6 +87,10 @@
 			"limit": {
 				"type": "Int",
 				"defaultValue": 2
+			},
+			"type": {
+				"type": "string",
+				"defaultValue": "users"
 			}
 		},
 		"annotations": []
