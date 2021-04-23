@@ -1,0 +1,20 @@
+{
+	"name": "DS_JSON_jsonplaceholder_Users_copy1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ABS_jsonplaceholder",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "users.json",
+				"folderPath": "merged",
+				"container": "json"
+			}
+		},
+		"schema": {}
+	}
+}
