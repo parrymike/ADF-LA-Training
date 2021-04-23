@@ -9,9 +9,9 @@
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "delete all user data",
+						"activity": "set data_type",
 						"dependencyConditions": [
-							"Completed"
+							"Succeeded"
 						]
 					}
 				],
@@ -245,7 +245,7 @@
 				}
 			},
 			{
-				"name": "delete all user data",
+				"name": "delete all type data",
 				"type": "Delete",
 				"dependsOn": [],
 				"policy": {
@@ -274,6 +274,27 @@
 						"enablePartitionDiscovery": false
 					}
 				}
+			},
+			{
+				"name": "set data_type",
+				"description": "set data type",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "delete all type data",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "data_type",
+					"value": {
+						"value": "@pipeline().parameters.data_type",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
@@ -284,6 +305,10 @@
 			"max_pages": {
 				"type": "int",
 				"defaultValue": 2
+			},
+			"data_type": {
+				"type": "string",
+				"defaultValue": "users"
 			}
 		},
 		"variables": {
