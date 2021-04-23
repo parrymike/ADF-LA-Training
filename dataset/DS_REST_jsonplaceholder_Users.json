@@ -20,7 +20,7 @@
 		"type": "RestResource",
 		"typeProperties": {
 			"relativeUrl": {
-				"value": "users?_page@{dataset()._page}&_limit=@{dataset()._limit}",
+				"value": "users?_page=@{dataset()._page}&_limit=@{dataset()._limit}",
 				"type": "Expression"
 			}
 		},
