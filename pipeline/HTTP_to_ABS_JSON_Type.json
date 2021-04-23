@@ -1,5 +1,5 @@
 {
-	"name": "Users_HTTP_to_ABS_JSON",
+	"name": "HTTP_to_ABS_JSON_Type",
 	"properties": {
 		"description": "Copy all User JSON data to ABS",
 		"activities": [
@@ -11,7 +11,7 @@
 					{
 						"activity": "delete all user data",
 						"dependencyConditions": [
-							"Succeeded"
+							"Completed"
 						]
 					}
 				],
@@ -226,8 +226,14 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "DS_JSON_jsonplaceholder_Users",
-						"type": "DatasetReference"
+						"referenceName": "DS_JSON_jsonplaceholder",
+						"type": "DatasetReference",
+						"parameters": {
+							"data_type": {
+								"value": "@variables('data_type')",
+								"type": "Expression"
+							}
+						}
 					},
 					"enableLogging": false,
 					"storeSettings": {
