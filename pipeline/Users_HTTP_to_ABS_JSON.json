@@ -1,0 +1,125 @@
+{
+	"name": "Users_HTTP_to_ABS_JSON",
+	"properties": {
+		"description": "Copy all User JSON data to ABS",
+		"activities": [
+			{
+				"name": "set page",
+				"description": "current results page",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "page",
+					"value": "1"
+				}
+			},
+			{
+				"name": "set page size",
+				"description": "set no of users per page",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set page",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "page_size",
+					"value": {
+						"value": "int(@pipeline().parameters.page_size)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "set max pages",
+				"description": "set max number of result pages",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set page size",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_pages",
+					"value": {
+						"value": "int(@variables('max_pages'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "until max pages",
+				"description": "loop until max page limit reached",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greaterOrEquals(variables('page'),variables('max_pages'))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Users_HTTP_to_ABS_JSON_by_page",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "Users_HTTP_to_ABS_JSON_by_page",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"_page": {
+										"value": "@variables('page')",
+										"type": "Expression"
+									},
+									"_limit": {
+										"value": "@variables('page_size')",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					],
+					"timeout": "7.00:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"page_size": {
+				"type": "int",
+				"defaultValue": 2
+			},
+			"max_pages": {
+				"type": "int",
+				"defaultValue": 2
+			}
+		},
+		"variables": {
+			"page": {
+				"type": "String",
+				"defaultValue": "1"
+			},
+			"page_size": {
+				"type": "String",
+				"defaultValue": "1"
+			},
+			"max_pages": {
+				"type": "String",
+				"defaultValue": "1"
+			}
+		},
+		"annotations": []
+	}
+}

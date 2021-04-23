@@ -1,5 +1,5 @@
 {
-	"name": "Users_HTTP_to_ABS_JSON",
+	"name": "Users_HTTP_to_ABS_JSON_by_page",
 	"properties": {
 		"description": "Copy users data to blob storage by page",
 		"activities": [
