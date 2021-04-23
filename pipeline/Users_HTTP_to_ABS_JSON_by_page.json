@@ -17,7 +17,7 @@
 				"userProperties": [
 					{
 						"name": "Source",
-						"value": "users?_page=@{pipeline().parameters._page}&_limit=@{pipeline().parameters._limit}"
+						"value": "users?_page=@{pipeline().parameters.page}&_limit=@{pipeline().parameters.limit}"
 					},
 					{
 						"name": "Destination",
