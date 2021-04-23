@@ -1,0 +1,85 @@
+{
+	"name": "Users_HTTP_to_ABS_JSON",
+	"properties": {
+		"description": "Copy users data to blob storage",
+		"activities": [
+			{
+				"name": "Copy Users from HTTP to ADS",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [
+					{
+						"name": "Source",
+						"value": "@{concat('users?_page=',pipeline().parameters._page,'&_limit=',pipeline().parameters._limit)}"
+					},
+					{
+						"name": "Destination",
+						"value": "json//"
+					}
+				],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET"
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"maxConcurrentConnections": 1,
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"dataIntegrationUnits": 2
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_REST_jsonplaceholder_Users",
+						"type": "DatasetReference",
+						"parameters": {
+							"_page": {
+								"value": "@pipeline().parameters._page",
+								"type": "Expression"
+							},
+							"_limit": {
+								"value": "@pipeline().parameters._limit",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_JSON_jsonplaceholder_Users",
+						"type": "DatasetReference"
+					}
+				]
+			}
+		],
+		"concurrency": 1,
+		"parameters": {
+			"_page": {
+				"type": "Int",
+				"defaultValue": 1
+			},
+			"_limit": {
+				"type": "Int",
+				"defaultValue": 2
+			}
+		},
+		"annotations": []
+	}
+}
