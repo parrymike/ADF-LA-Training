@@ -51,11 +51,11 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"page": {
-								"value": "@pipeline().parameters._page",
+								"value": "@pipeline().parameters.page",
 								"type": "Expression"
 							},
 							"limit": {
-								"value": "@pipeline().parameters._limit",
+								"value": "@pipeline().parameters.limit",
 								"type": "Expression"
 							}
 						}
@@ -71,11 +71,11 @@
 		],
 		"concurrency": 1,
 		"parameters": {
-			"_page": {
+			"page": {
 				"type": "Int",
 				"defaultValue": 1
 			},
-			"_limit": {
+			"limit": {
 				"type": "Int",
 				"defaultValue": 2
 			}
