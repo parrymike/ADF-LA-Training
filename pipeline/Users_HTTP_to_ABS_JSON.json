@@ -12,7 +12,7 @@
 				"typeProperties": {
 					"variableName": "page_size",
 					"value": {
-						"value": "int(@pipeline().parameters.page_size)",
+						"value": "@string(pipeline().parameters.page_size)",
 						"type": "Expression"
 					}
 				}
@@ -33,7 +33,7 @@
 				"typeProperties": {
 					"variableName": "max_pages",
 					"value": {
-						"value": "int(@variables('max_pages'))",
+						"value": "@string(pipeline().parameters.max_pages)",
 						"type": "Expression"
 					}
 				}
@@ -53,7 +53,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greaterOrEquals(int(variables('page')),variables('max_pages'))",
+						"value": "@greaterOrEquals(int(variables('page')),int(variables('max_pages')))",
 						"type": "Expression"
 					},
 					"activities": [
@@ -70,11 +70,11 @@
 								"waitOnCompletion": true,
 								"parameters": {
 									"_page": {
-										"value": "@variables('page')",
+										"value": "@int(variables('page'))",
 										"type": "Expression"
 									},
 									"_limit": {
-										"value": "@variables('page_size')",
+										"value": "@int(variables('page_size'))",
 										"type": "Expression"
 									}
 								}
