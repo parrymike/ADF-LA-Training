@@ -50,11 +50,11 @@
 						"referenceName": "DS_REST_jsonplaceholder_Users",
 						"type": "DatasetReference",
 						"parameters": {
-							"_page": {
+							"page": {
 								"value": "@pipeline().parameters._page",
 								"type": "Expression"
 							},
-							"_limit": {
+							"limit": {
 								"value": "@pipeline().parameters._limit",
 								"type": "Expression"
 							}
