@@ -9,7 +9,7 @@
 				"type": "SetVariable",
 				"dependsOn": [
 					{
-						"activity": "delete merged user data",
+						"activity": "delete all user data",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -223,7 +223,7 @@
 				}
 			},
 			{
-				"name": "delete merged user data",
+				"name": "delete all user data",
 				"type": "Delete",
 				"dependsOn": [],
 				"policy": {
@@ -236,7 +236,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataset": {
-						"referenceName": "DS_JSON_jsonplaceholder_Users_merged",
+						"referenceName": "DS_JSON_jsonplaceholder_Users",
 						"type": "DatasetReference"
 					},
 					"enableLogging": false,
