@@ -177,7 +177,7 @@
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_JSON_jsonplaceholder_Users",
+						"referenceName": "DS_JSON_jsonplaceholder_Users_merged",
 						"type": "DatasetReference"
 					}
 				]
