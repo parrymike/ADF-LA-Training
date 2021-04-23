@@ -17,11 +17,11 @@
 				"userProperties": [
 					{
 						"name": "Source",
-						"value": "@{concat('users?_page=',pipeline().parameters._page,'&_limit=',pipeline().parameters._limit)}"
+						"value": "users?_page=@{pipeline().parameters._page}&_limit=@{pipeline().parameters._limit}"
 					},
 					{
 						"name": "Destination",
-						"value": "json//"
+						"value": "json//users.json"
 					}
 				],
 				"typeProperties": {
@@ -35,12 +35,11 @@
 						"type": "JsonSink",
 						"storeSettings": {
 							"type": "AzureBlobStorageWriteSettings",
-							"maxConcurrentConnections": 1,
 							"copyBehavior": "MergeFiles"
 						},
 						"formatSettings": {
 							"type": "JsonWriteSettings",
-							"filePattern": "setOfObjects"
+							"filePattern": "arrayOfObjects"
 						}
 					},
 					"enableStaging": false,
