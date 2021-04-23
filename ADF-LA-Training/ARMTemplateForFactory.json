@@ -61,6 +61,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
+						"fileName": "users.json",
 						"container": "json"
 					}
 				},
@@ -135,11 +136,11 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Users_HTTP_to_ABS_JSON')]",
+			"name": "[concat(parameters('factoryName'), '/Users_HTTP_to_ABS_JSON_by_page')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Copy users data to blob storage",
+				"description": "Copy users data to blob storage by page",
 				"activities": [
 					{
 						"name": "Copy Users from HTTP to ADS",
@@ -224,6 +225,168 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/DS_REST_jsonplaceholder_Users')]",
 				"[concat(variables('factoryId'), '/datasets/DS_JSON_jsonplaceholder_Users')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Users_HTTP_to_ABS_JSON')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Copy all User JSON data to ABS",
+				"activities": [
+					{
+						"name": "set page size",
+						"description": "set no of users per page",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "page_size",
+							"value": {
+								"value": "@string(pipeline().parameters.page_size)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "set max pages",
+						"description": "set max number of result pages",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "set page size",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "max_pages",
+							"value": {
+								"value": "@string(pipeline().parameters.max_pages)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "until max pages",
+						"description": "loop until max page limit reached",
+						"type": "Until",
+						"dependsOn": [
+							{
+								"activity": "set max pages",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@greater(int(variables('page')),int(variables('max_pages')))",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Users_HTTP_to_ABS_JSON_by_page",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "Users_HTTP_to_ABS_JSON_by_page",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"_page": {
+												"value": "@int(variables('page'))",
+												"type": "Expression"
+											},
+											"_limit": {
+												"value": "@int(variables('page_size'))",
+												"type": "Expression"
+											}
+										}
+									}
+								},
+								{
+									"name": "set temp page",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Users_HTTP_to_ABS_JSON_by_page",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "temp_page",
+										"value": {
+											"value": "@string(add(int(variables('page')),1))",
+											"type": "Expression"
+										}
+									}
+								},
+								{
+									"name": "update page",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "set temp page",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "page",
+										"value": {
+											"value": "@variables('temp_page')",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"timeout": "7.00:00:00"
+						}
+					}
+				],
+				"parameters": {
+					"page_size": {
+						"type": "int",
+						"defaultValue": 2
+					},
+					"max_pages": {
+						"type": "int",
+						"defaultValue": 2
+					}
+				},
+				"variables": {
+					"page": {
+						"type": "String",
+						"defaultValue": "1"
+					},
+					"page_size": {
+						"type": "String",
+						"defaultValue": "1"
+					},
+					"max_pages": {
+						"type": "String",
+						"defaultValue": "1"
+					},
+					"temp_page": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/Users_HTTP_to_ABS_JSON_by_page')]"
 			]
 		}
 	]
