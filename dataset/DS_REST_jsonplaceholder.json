@@ -1,0 +1,33 @@
+{
+	"name": "DS_REST_jsonplaceholder",
+	"properties": {
+		"description": "Test dataset for data",
+		"linkedServiceName": {
+			"referenceName": "LS_REST_jsonplaceholder",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"page": {
+				"type": "string",
+				"defaultValue": "1"
+			},
+			"limit": {
+				"type": "string",
+				"defaultValue": "2"
+			},
+			"type": {
+				"type": "string",
+				"defaultValue": "users"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@{dataset().type}?_page=@{dataset().page}&_limit=@{dataset().limit}",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	}
+}
