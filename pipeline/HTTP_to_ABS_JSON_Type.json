@@ -165,7 +165,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"url": {
-						"value": "https://jsonplaceholder.cypress.io/@{pipeline().parameters.data_type}?_start=1&_end=2\n\n",
+						"value": "https://jsonplaceholder.cypress.io/@{pipeline().parameters.data_type}?_start=1&_end=2",
 						"type": "Expression"
 					},
 					"method": "GET"
@@ -246,7 +246,7 @@
 				"typeProperties": {
 					"variableName": "max_page",
 					"value": {
-						"value": "@if(greater(int(variables('last_page')),pipeline().parameters.max_pages),string(pipeline().parameters.max_pages),variables('last_page'))",
+						"value": "@if(\n  greater(\n    int(variables('last_page')),\n    pipeline().parameters.max_pages\n  ),\n  string(pipeline().parameters.max_pages),\n  variables('last_page')\n)",
 						"type": "Expression"
 					}
 				}
@@ -363,14 +363,7 @@
 			}
 		},
 		"variables": {
-			"page": {
-				"type": "String",
-				"defaultValue": "1"
-			},
 			"last_page": {
-				"type": "String"
-			},
-			"temp_page": {
 				"type": "String"
 			},
 			"rec_count": {
