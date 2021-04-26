@@ -6,7 +6,14 @@
 			{
 				"name": "merge data files",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "fetch_page_results",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -219,7 +226,7 @@
 				"typeProperties": {
 					"variableName": "pages",
 					"value": {
-						"value": "@range(1,variables('max_page'))",
+						"value": "@range(1,int(variables('max_page')))",
 						"type": "Expression"
 					}
 				}
@@ -239,7 +246,7 @@
 				"typeProperties": {
 					"variableName": "max_page",
 					"value": {
-						"value": "@if(greater(variables('last_page'),pipeline().parameters.max_pages),pipeline().parameters.max_pages,variables('last_page'))",
+						"value": "@if(greater(int(variables('last_page')),pipeline().parameters.max_pages),string(pipeline().parameters.max_pages),variables('last_page'))",
 						"type": "Expression"
 					}
 				}
@@ -261,6 +268,7 @@
 						"value": "@variables('pages')",
 						"type": "Expression"
 					},
+					"isSequential": false,
 					"batchCount": 10,
 					"activities": [
 						{
@@ -273,7 +281,7 @@
 									"referenceName": "HTTP_to_ABS_JSON_by_page",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true,
+								"waitOnCompletion": false,
 								"parameters": {
 									"page": "@{item()}",
 									"limit": {
