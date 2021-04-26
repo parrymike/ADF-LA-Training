@@ -156,7 +156,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"data_type": {
-								"value": "@{pipeline().parameters.data_type}/merged/\n",
+								"value": "@{pipeline().parameters.data_type}/merged/",
 								"type": "Expression"
 							}
 						}
