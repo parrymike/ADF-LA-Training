@@ -285,11 +285,11 @@
 							"userProperties": [
 								{
 									"name": "Source",
-									"value": "users?_page=@{pipeline().parameters.page}&_limit=@{pipeline().parameters.limit}"
+									"value": "@{pipeline().parameters.data_type}?_page=@{item()}&_limit=@{pipeline().parameters.page_size}"
 								},
 								{
 									"name": "Destination",
-									"value": "json//users.json"
+									"value": "json/@{pipeline().parameters.data_type}/"
 								}
 							],
 							"typeProperties": {
