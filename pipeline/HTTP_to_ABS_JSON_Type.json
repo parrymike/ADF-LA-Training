@@ -4,106 +4,9 @@
 		"description": "Copy all User JSON data to ABS",
 		"activities": [
 			{
-				"name": "until max pages",
-				"description": "loop until pages limit or max page limit reached - whichever is lowest",
-				"type": "Until",
-				"dependsOn": [
-					{
-						"activity": "set_pages",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"expression": {
-						"value": "@or(\n  greater(\n    int(variables('page')),\n    int(variables('pages'))),\n  greater(\n    int(variables('page')),\n    int(pipeline().parameters.max_pages))\n)",
-						"type": "Expression"
-					},
-					"activities": [
-						{
-							"name": "Users_HTTP_to_ABS_JSON_by_page",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "HTTP_to_ABS_JSON_by_page",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true,
-								"parameters": {
-									"page": {
-										"value": "@variables('page')",
-										"type": "Expression"
-									},
-									"limit": {
-										"value": "@pipeline().parameters.page_size",
-										"type": "Expression"
-									},
-									"data_type": {
-										"value": "@pipeline().parameters.data_type",
-										"type": "Expression"
-									}
-								}
-							}
-						},
-						{
-							"name": "set temp page",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "Users_HTTP_to_ABS_JSON_by_page",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "temp_page",
-								"value": {
-									"value": "@string(add(int(variables('page')),1))",
-									"type": "Expression"
-								}
-							}
-						},
-						{
-							"name": "update page",
-							"type": "SetVariable",
-							"dependsOn": [
-								{
-									"activity": "set temp page",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"variableName": "page",
-								"value": {
-									"value": "@variables('temp_page')",
-									"type": "Expression"
-								}
-							}
-						}
-					],
-					"timeout": "7.00:00:00"
-				}
-			},
-			{
 				"name": "merge data files",
 				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "until max pages",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
+				"dependsOn": [],
 				"policy": {
 					"timeout": "7.00:00:00",
 					"retry": 0,
@@ -282,7 +185,7 @@
 				}
 			},
 			{
-				"name": "set_pages",
+				"name": "set_last_page",
 				"type": "SetVariable",
 				"dependsOn": [
 					{
@@ -294,11 +197,97 @@
 				],
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "pages",
+					"variableName": "last_page",
 					"value": {
 						"value": "@string(\n\tadd(\n\t\tdiv(\n\t\t\tint(variables('rec_count')),\n\t\t\tpipeline().parameters.page_size\n\t\t),\n\t\tif(\n\t\t\tequals(\n\t\t\t\tmod(\n\t\t\t\t\tint(variables('rec_count')),\n\t\t\t\t\tpipeline().parameters.page_size\n\t\t\t\t),\n\t\t\t0),\n\t\t0,\n\t\t1\n\t\t)\n\t)\n)",
 						"type": "Expression"
 					}
+				}
+			},
+			{
+				"name": "set_pages_array",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set_max_page",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pages",
+					"value": {
+						"value": "@range(1,variables('max_page'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "set_max_page",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set_last_page",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_page",
+					"value": {
+						"value": "@if(greater(variables('last_page'),pipeline().parameters.max_pages),pipeline().parameters.max_pages,variables('last_page'))",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "fetch_page_results",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "set_pages_array",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('pages')",
+						"type": "Expression"
+					},
+					"batchCount": 10,
+					"activities": [
+						{
+							"name": "HTTP_to_ABS_JSON_by_page",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "HTTP_to_ABS_JSON_by_page",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"page": "@{item()}",
+									"limit": {
+										"value": "@pipeline().parameters.page_size",
+										"type": "Expression"
+									},
+									"data_type": {
+										"value": "@pipeline().parameters.data_type",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
 				}
 			}
 		],
@@ -320,9 +309,8 @@
 				"type": "String",
 				"defaultValue": "1"
 			},
-			"pages": {
-				"type": "String",
-				"defaultValue": "1"
+			"last_page": {
+				"type": "String"
 			},
 			"temp_page": {
 				"type": "String"
@@ -330,6 +318,12 @@
 			"rec_count": {
 				"type": "String",
 				"defaultValue": "0"
+			},
+			"pages": {
+				"type": "Array"
+			},
+			"max_page": {
+				"type": "String"
 			}
 		},
 		"annotations": []
