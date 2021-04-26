@@ -272,31 +272,78 @@
 					"batchCount": 10,
 					"activities": [
 						{
-							"name": "HTTP_to_ABS_JSON_by_page",
-							"type": "ExecutePipeline",
+							"name": "Copy data from HTTP to ADS",
+							"type": "Copy",
 							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "HTTP_to_ABS_JSON_by_page",
-									"type": "PipelineReference"
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "@{pipeline().parameters.data_type}?_page=@{item()}&_limit=@{pipeline().parameters.page_size}"
 								},
-								"waitOnCompletion": false,
-								"parameters": {
-									"page": {
-										"value": "@{item()}",
-										"type": "Expression"
+								{
+									"name": "Destination",
+									"value": "json/@{pipeline().parameters.data_type}/"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "RestSource",
+									"httpRequestTimeout": "00:01:40",
+									"requestInterval": "00.00:00:00.010",
+									"requestMethod": "GET"
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobStorageWriteSettings"
 									},
-									"limit": {
-										"value": "@pipeline().parameters.page_size",
-										"type": "Expression"
-									},
-									"data_type": {
-										"value": "@pipeline().parameters.data_type",
-										"type": "Expression"
+									"formatSettings": {
+										"type": "JsonWriteSettings",
+										"filePattern": "setOfObjects"
+									}
+								},
+								"enableStaging": false,
+								"dataIntegrationUnits": 2
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_REST_jsonplaceholder",
+									"type": "DatasetReference",
+									"parameters": {
+										"page": {
+											"value": "@{item()}",
+											"type": "Expression"
+										},
+										"limit": {
+											"value": "@pipeline().parameters.page_size",
+											"type": "Expression"
+										},
+										"data_type": {
+											"value": "@pipeline().parameters.data_type",
+											"type": "Expression"
+										}
 									}
 								}
-							}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_JSON_jsonplaceholder",
+									"type": "DatasetReference",
+									"parameters": {
+										"data_type": {
+											"value": "@pipeline().parameters.data_type",
+											"type": "Expression"
+										}
+									}
+								}
+							]
 						}
 					]
 				}
