@@ -281,7 +281,7 @@
 									"referenceName": "HTTP_to_ABS_JSON_by_page",
 									"type": "PipelineReference"
 								},
-								"waitOnCompletion": true,
+								"waitOnCompletion": false,
 								"parameters": {
 									"page": {
 										"value": "@{item()}",
