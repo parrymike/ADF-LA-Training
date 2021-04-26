@@ -1,0 +1,338 @@
+{
+	"name": "HTTP_to_ABS_JSON_Type",
+	"properties": {
+		"description": "Copy all User JSON data to ABS",
+		"activities": [
+			{
+				"name": "set page size",
+				"description": "set no of users per page",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set data_type",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "page_size",
+					"value": {
+						"value": "@string(pipeline().parameters.page_size)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "set max pages",
+				"description": "set max number of result pages",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set page size",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_pages",
+					"value": {
+						"value": "@string(pipeline().parameters.max_pages)",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "until max pages",
+				"description": "loop until max page limit reached",
+				"type": "Until",
+				"dependsOn": [
+					{
+						"activity": "set max pages",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(int(variables('page')),int(variables('max_pages')))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Users_HTTP_to_ABS_JSON_by_page",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "HTTP_to_ABS_JSON_by_page",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"page": {
+										"value": "@variables('page')",
+										"type": "Expression"
+									},
+									"limit": {
+										"value": "@variables('page_size')",
+										"type": "Expression"
+									},
+									"data_type": {
+										"value": "@variables('data_type')",
+										"type": "Expression"
+									}
+								}
+							}
+						},
+						{
+							"name": "set temp page",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Users_HTTP_to_ABS_JSON_by_page",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "temp_page",
+								"value": {
+									"value": "@string(add(int(variables('page')),1))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "update page",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "set temp page",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "page",
+								"value": {
+									"value": "@variables('temp_page')",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"timeout": "7.00:00:00"
+				}
+			},
+			{
+				"name": "merge user files",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "until max pages",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobStorageReadSettings",
+							"recursive": true,
+							"wildcardFileName": "*.json",
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobStorageWriteSettings",
+							"copyBehavior": "MergeFiles"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"dataIntegrationUnits": 2
+				},
+				"inputs": [
+					{
+						"referenceName": "DS_JSON_jsonplaceholder",
+						"type": "DatasetReference",
+						"parameters": {
+							"data_type": {
+								"value": "@variables('data_type')",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "DS_JSON_jsonplaceholder",
+						"type": "DatasetReference",
+						"parameters": {
+							"data_type": {
+								"value": "@{variables('data_type')}/merged/",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "delete paged user data",
+				"type": "Delete",
+				"dependsOn": [
+					{
+						"activity": "merge user files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_JSON_jsonplaceholder",
+						"type": "DatasetReference",
+						"parameters": {
+							"data_type": {
+								"value": "@variables('data_type')",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": false,
+						"wildcardFileName": "*.json",
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "delete all type data",
+				"type": "Delete",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "DS_JSON_jsonplaceholder",
+						"type": "DatasetReference",
+						"parameters": {
+							"data_type": {
+								"value": "@pipeline().parameters.data_type",
+								"type": "Expression"
+							}
+						}
+					},
+					"enableLogging": false,
+					"storeSettings": {
+						"type": "AzureBlobStorageReadSettings",
+						"recursive": true,
+						"wildcardFileName": "*.json",
+						"enablePartitionDiscovery": false
+					}
+				}
+			},
+			{
+				"name": "set data_type",
+				"description": "set data type",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "delete all type data",
+						"dependencyConditions": [
+							"Completed"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "data_type",
+					"value": {
+						"value": "@pipeline().parameters.data_type",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"page_size": {
+				"type": "int",
+				"defaultValue": 2
+			},
+			"max_pages": {
+				"type": "int",
+				"defaultValue": 2
+			},
+			"data_type": {
+				"type": "string",
+				"defaultValue": "users"
+			}
+		},
+		"variables": {
+			"page": {
+				"type": "String",
+				"defaultValue": "1"
+			},
+			"page_size": {
+				"type": "String",
+				"defaultValue": "1"
+			},
+			"max_pages": {
+				"type": "String",
+				"defaultValue": "1"
+			},
+			"temp_page": {
+				"type": "String"
+			},
+			"data_type": {
+				"type": "String",
+				"defaultValue": "users"
+			}
+		},
+		"annotations": []
+	}
+}
