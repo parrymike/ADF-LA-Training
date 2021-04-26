@@ -10,7 +10,7 @@
 					{
 						"activity": "fetch_page_results",
 						"dependencyConditions": [
-							"Succeeded"
+							"Completed"
 						]
 					}
 				],
@@ -283,7 +283,10 @@
 								},
 								"waitOnCompletion": false,
 								"parameters": {
-									"page": "@{item()}",
+									"page": {
+										"value": "@{item()}",
+										"type": "Expression"
+									},
 									"limit": {
 										"value": "@pipeline().parameters.page_size",
 										"type": "Expression"
