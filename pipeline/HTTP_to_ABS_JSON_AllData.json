@@ -48,11 +48,11 @@
 		"parameters": {
 			"page_size": {
 				"type": "int",
-				"defaultValue": 2
+				"defaultValue": 20
 			},
 			"max_pages": {
 				"type": "int",
-				"defaultValue": 2
+				"defaultValue": 10
 			}
 		},
 		"variables": {
