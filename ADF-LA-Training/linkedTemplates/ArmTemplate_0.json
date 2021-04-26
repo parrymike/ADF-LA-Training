@@ -51,7 +51,7 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_JSON_jsonplaceholder_Users')]",
+			"name": "[concat(parameters('factoryName'), '/DS_JSON_jsonplaceholder')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -59,12 +59,21 @@
 					"referenceName": "LS_ABS_jsonplaceholder",
 					"type": "LinkedServiceReference"
 				},
+				"parameters": {
+					"data_type": {
+						"type": "string",
+						"defaultValue": "users"
+					}
+				},
 				"annotations": [],
 				"type": "Json",
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobStorageLocation",
-						"fileName": "users.json",
+						"folderPath": {
+							"value": "@dataset().data_type",
+							"type": "Expression"
+						},
 						"container": "json"
 					}
 				},
@@ -75,57 +84,34 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/DS_CSV_jsonplaceholder_Users')]",
+			"name": "[concat(parameters('factoryName'), '/DS_REST_jsonplaceholder')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"linkedServiceName": {
-					"referenceName": "LS_ABS_jsonplaceholder",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobStorageLocation",
-						"container": "csv"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": false,
-					"quoteChar": "\""
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/LS_ABS_jsonplaceholder')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_REST_jsonplaceholder_Users')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Test dataset for user data",
+				"description": "Test dataset for data",
 				"linkedServiceName": {
 					"referenceName": "LS_REST_jsonplaceholder",
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
-					"_page": {
+					"page": {
 						"type": "string",
 						"defaultValue": "1"
 					},
-					"_limit": {
+					"limit": {
 						"type": "string",
 						"defaultValue": "2"
+					},
+					"data_type": {
+						"type": "string",
+						"defaultValue": "users"
 					}
 				},
 				"annotations": [],
 				"type": "RestResource",
 				"typeProperties": {
 					"relativeUrl": {
-						"value": "users?_page=@{dataset()._page}&_limit=@{dataset()._limit}",
+						"value": "@{dataset().data_type}?_page=@{dataset().page}&_limit=@{dataset().limit}",
 						"type": "Expression"
 					}
 				},
@@ -136,14 +122,14 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/Users_HTTP_to_ABS_JSON_by_page')]",
+			"name": "[concat(parameters('factoryName'), '/HTTP_to_ABS_JSON_by_page')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
-				"description": "Copy users data to blob storage by page",
+				"description": "Copy data to blob storage by page",
 				"activities": [
 					{
-						"name": "Copy Users from HTTP to ADS",
+						"name": "Copy data from HTTP to ADS",
 						"type": "Copy",
 						"dependsOn": [],
 						"policy": {
@@ -156,11 +142,11 @@
 						"userProperties": [
 							{
 								"name": "Source",
-								"value": "@{concat('users?_page=',pipeline().parameters._page,'&_limit=',pipeline().parameters._limit)}"
+								"value": "users?_page=@{pipeline().parameters.page}&_limit=@{pipeline().parameters.limit}"
 							},
 							{
 								"name": "Destination",
-								"value": "json//"
+								"value": "json//users.json"
 							}
 						],
 						"typeProperties": {
@@ -173,8 +159,115 @@
 							"sink": {
 								"type": "JsonSink",
 								"storeSettings": {
+									"type": "AzureBlobStorageWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings",
+									"filePattern": "setOfObjects"
+								}
+							},
+							"enableStaging": false,
+							"dataIntegrationUnits": 2
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_REST_jsonplaceholder",
+								"type": "DatasetReference",
+								"parameters": {
+									"page": {
+										"value": "@pipeline().parameters.page",
+										"type": "Expression"
+									},
+									"limit": {
+										"value": "@pipeline().parameters.limit",
+										"type": "Expression"
+									},
+									"data_type": {
+										"value": "@pipeline().parameters.data_type",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_JSON_jsonplaceholder",
+								"type": "DatasetReference",
+								"parameters": {
+									"data_type": {
+										"value": "@pipeline().parameters.data_type",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					}
+				],
+				"concurrency": 1,
+				"parameters": {
+					"page": {
+						"type": "Int",
+						"defaultValue": 1
+					},
+					"limit": {
+						"type": "Int",
+						"defaultValue": 2
+					},
+					"data_type": {
+						"type": "string",
+						"defaultValue": "users"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_REST_jsonplaceholder')]",
+				"[concat(variables('factoryId'), '/datasets/DS_JSON_jsonplaceholder')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HTTP_to_ABS_JSON_Type')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Copy all User JSON data to ABS",
+				"activities": [
+					{
+						"name": "merge data files",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "fetch_page_results",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"wildcardFileName": "*.json",
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							},
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
 									"type": "AzureBlobStorageWriteSettings",
-									"maxConcurrentConnections": 1,
 									"copyBehavior": "MergeFiles"
 								},
 								"formatSettings": {
@@ -186,15 +279,11 @@
 						},
 						"inputs": [
 							{
-								"referenceName": "DS_REST_jsonplaceholder_Users",
+								"referenceName": "DS_JSON_jsonplaceholder",
 								"type": "DatasetReference",
 								"parameters": {
-									"_page": {
-										"value": "@pipeline().parameters._page",
-										"type": "Expression"
-									},
-									"_limit": {
-										"value": "@pipeline().parameters._limit",
+									"data_type": {
+										"value": "@pipeline().parameters.data_type",
 										"type": "Expression"
 									}
 								}
@@ -202,169 +291,258 @@
 						],
 						"outputs": [
 							{
-								"referenceName": "DS_JSON_jsonplaceholder_Users",
+								"referenceName": "DS_JSON_jsonplaceholder",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"data_type": {
+										"value": "@{pipeline().parameters.data_type}/merged/",
+										"type": "Expression"
+									}
+								}
 							}
 						]
-					}
-				],
-				"concurrency": 1,
-				"parameters": {
-					"_page": {
-						"type": "Int",
-						"defaultValue": 1
 					},
-					"_limit": {
-						"type": "Int",
-						"defaultValue": 2
-					}
-				},
-				"annotations": [],
-				"lastPublishTime": "2021-04-23T12:39:40Z"
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/DS_REST_jsonplaceholder_Users')]",
-				"[concat(variables('factoryId'), '/datasets/DS_JSON_jsonplaceholder_Users')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Users_HTTP_to_ABS_JSON')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"description": "Copy all User JSON data to ABS",
-				"activities": [
 					{
-						"name": "set page size",
-						"description": "set no of users per page",
-						"type": "SetVariable",
+						"name": "delete paged user data",
+						"type": "Delete",
+						"dependsOn": [
+							{
+								"activity": "merge data files",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "DS_JSON_jsonplaceholder",
+								"type": "DatasetReference",
+								"parameters": {
+									"data_type": {
+										"value": "@pipeline().parameters.data_type",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": false,
+								"wildcardFileName": "*.json",
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "delete all type data",
+						"type": "Delete",
 						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"variableName": "page_size",
-							"value": {
-								"value": "@string(pipeline().parameters.page_size)",
-								"type": "Expression"
+							"dataset": {
+								"referenceName": "DS_JSON_jsonplaceholder",
+								"type": "DatasetReference",
+								"parameters": {
+									"data_type": {
+										"value": "@pipeline().parameters.data_type",
+										"type": "Expression"
+									}
+								}
+							},
+							"enableLogging": false,
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"wildcardFileName": "*.json",
+								"enablePartitionDiscovery": false
 							}
 						}
 					},
 					{
-						"name": "set max pages",
-						"description": "set max number of result pages",
-						"type": "SetVariable",
+						"name": "get_rec_count",
+						"type": "WebActivity",
 						"dependsOn": [
 							{
-								"activity": "set page size",
+								"activity": "delete all type data",
 								"dependencyConditions": [
-									"Succeeded"
+									"Completed"
 								]
 							}
 						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
-							"variableName": "max_pages",
-							"value": {
-								"value": "@string(pipeline().parameters.max_pages)",
-								"type": "Expression"
-							}
-						}
-					},
-					{
-						"name": "until max pages",
-						"description": "loop until max page limit reached",
-						"type": "Until",
-						"dependsOn": [
-							{
-								"activity": "set max pages",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@greater(int(variables('page')),int(variables('max_pages')))",
+							"url": {
+								"value": "https://jsonplaceholder.cypress.io/@{pipeline().parameters.data_type}?_start=1&_end=2\n\n",
 								"type": "Expression"
 							},
+							"method": "GET",
+							"headers": {}
+						}
+					},
+					{
+						"name": "set_rec_count",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "get_rec_count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "rec_count",
+							"value": {
+								"value": "@activity('get_rec_count').output.ADFWebActivityResponseHeaders['X-Total-Count']",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "set_last_page",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "set_rec_count",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "last_page",
+							"value": {
+								"value": "@string(\n\tadd(\n\t\tdiv(\n\t\t\tint(variables('rec_count')),\n\t\t\tpipeline().parameters.page_size\n\t\t),\n\t\tif(\n\t\t\tequals(\n\t\t\t\tmod(\n\t\t\t\t\tint(variables('rec_count')),\n\t\t\t\t\tpipeline().parameters.page_size\n\t\t\t\t),\n\t\t\t0),\n\t\t0,\n\t\t1\n\t\t)\n\t)\n)",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "set_pages_array",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "set_max_page",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "pages",
+							"value": {
+								"value": "@range(1,int(variables('max_page')))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "set_max_page",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "set_last_page",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "max_page",
+							"value": {
+								"value": "@if(greater(int(variables('last_page')),pipeline().parameters.max_pages),string(pipeline().parameters.max_pages),variables('last_page'))",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "fetch_page_results",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "set_pages_array",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('pages')",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"batchCount": 10,
 							"activities": [
 								{
-									"name": "Users_HTTP_to_ABS_JSON_by_page",
+									"name": "HTTP_to_ABS_JSON_by_page",
 									"type": "ExecutePipeline",
 									"dependsOn": [],
 									"userProperties": [],
 									"typeProperties": {
 										"pipeline": {
-											"referenceName": "Users_HTTP_to_ABS_JSON_by_page",
+											"referenceName": "HTTP_to_ABS_JSON_by_page",
 											"type": "PipelineReference"
 										},
-										"waitOnCompletion": true,
+										"waitOnCompletion": false,
 										"parameters": {
-											"_page": {
-												"value": "@int(variables('page'))",
+											"page": {
+												"value": "@{item()}",
 												"type": "Expression"
 											},
-											"_limit": {
-												"value": "@int(variables('page_size'))",
+											"limit": {
+												"value": "@pipeline().parameters.page_size",
+												"type": "Expression"
+											},
+											"data_type": {
+												"value": "@pipeline().parameters.data_type",
 												"type": "Expression"
 											}
 										}
 									}
-								},
-								{
-									"name": "set temp page",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "Users_HTTP_to_ABS_JSON_by_page",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "temp_page",
-										"value": {
-											"value": "@string(add(int(variables('page')),1))",
-											"type": "Expression"
-										}
-									}
-								},
-								{
-									"name": "update page",
-									"type": "SetVariable",
-									"dependsOn": [
-										{
-											"activity": "set temp page",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
-									"userProperties": [],
-									"typeProperties": {
-										"variableName": "page",
-										"value": {
-											"value": "@variables('temp_page')",
-											"type": "Expression"
-										}
-									}
 								}
-							],
-							"timeout": "7.00:00:00"
+							]
 						}
 					}
 				],
 				"parameters": {
 					"page_size": {
 						"type": "int",
-						"defaultValue": 2
+						"defaultValue": 0
 					},
 					"max_pages": {
 						"type": "int",
-						"defaultValue": 2
+						"defaultValue": 0
+					},
+					"data_type": {
+						"type": "string"
 					}
 				},
 				"variables": {
@@ -372,23 +550,102 @@
 						"type": "String",
 						"defaultValue": "1"
 					},
-					"page_size": {
-						"type": "String",
-						"defaultValue": "1"
-					},
-					"max_pages": {
-						"type": "String",
-						"defaultValue": "1"
+					"last_page": {
+						"type": "String"
 					},
 					"temp_page": {
 						"type": "String"
+					},
+					"rec_count": {
+						"type": "String",
+						"defaultValue": "0"
+					},
+					"pages": {
+						"type": "Array"
+					},
+					"max_page": {
+						"type": "String"
 					}
 				},
-				"annotations": [],
-				"lastPublishTime": "2021-04-23T12:39:40Z"
+				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/Users_HTTP_to_ABS_JSON_by_page')]"
+				"[concat(variables('factoryId'), '/datasets/DS_JSON_jsonplaceholder')]",
+				"[concat(variables('factoryId'), '/pipelines/HTTP_to_ABS_JSON_by_page')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/HTTP_to_ABS_JSON_AllData')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ForEachDataType",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@variables('Data_Types')",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Get_DataType_data",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "HTTP_to_ABS_JSON_Type",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"page_size": {
+												"value": "@pipeline().parameters.page_size",
+												"type": "Expression"
+											},
+											"max_pages": {
+												"value": "@pipeline().parameters.max_pages",
+												"type": "Expression"
+											},
+											"data_type": {
+												"value": "@item()",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"parameters": {
+					"page_size": {
+						"type": "int",
+						"defaultValue": 20
+					},
+					"max_pages": {
+						"type": "int",
+						"defaultValue": 10
+					}
+				},
+				"variables": {
+					"Data_Types": {
+						"type": "Array",
+						"defaultValue": [
+							"users",
+							"posts"
+						]
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/HTTP_to_ABS_JSON_Type')]"
 			]
 		}
 	]
