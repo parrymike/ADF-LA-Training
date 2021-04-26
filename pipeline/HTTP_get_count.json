@@ -1,0 +1,89 @@
+{
+	"name": "HTTP_get_count",
+	"properties": {
+		"description": "Copy data to blob storage by page",
+		"activities": [
+			{
+				"name": "get_rec_count",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": {
+						"value": "https://jsonplaceholder.cypress.io/@{pipeline().parameters.data_type}?_start=1&_end=2\n\n",
+						"type": "Expression"
+					},
+					"method": "GET"
+				}
+			},
+			{
+				"name": "set_rec_count",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "get_rec_count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "record_count",
+					"value": {
+						"value": "@activity('get_rec_count').output.ADFWebActivityResponseHeaders['X-Total-Count']",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "set_max_pages",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set_rec_count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "max_pages",
+					"value": {
+						"value": "@string(\n\tadd(\n\t\tdiv(\n\t\t\tint(variables('record_count')),\n\t\t\tpipeline().parameters.page_size\n\t\t),\n\t\tif(\n\t\t\tequals(\n\t\t\t\tmod(\n\t\t\t\t\tint(variables('record_count')),\n\t\t\t\t\tpipeline().parameters.page_size\n\t\t\t\t),\n\t\t\t0),\n\t\t0,\n\t\t1\n\t\t)\n\t)\n)",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"concurrency": 1,
+		"parameters": {
+			"data_type": {
+				"type": "string",
+				"defaultValue": "users"
+			},
+			"page_size": {
+				"type": "int"
+			}
+		},
+		"variables": {
+			"record_count": {
+				"type": "String",
+				"defaultValue": "0"
+			},
+			"max_pages": {
+				"type": "String",
+				"defaultValue": "0"
+			}
+		},
+		"annotations": []
+	}
+}
