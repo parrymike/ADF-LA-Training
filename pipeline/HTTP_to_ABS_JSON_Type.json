@@ -4,54 +4,12 @@
 		"description": "Copy all User JSON data to ABS",
 		"activities": [
 			{
-				"name": "set page size",
-				"description": "set no of users per page",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "set data_type",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "page_size",
-					"value": {
-						"value": "@string(pipeline().parameters.page_size)",
-						"type": "Expression"
-					}
-				}
-			},
-			{
-				"name": "set max pages",
-				"description": "set max number of result pages",
-				"type": "SetVariable",
-				"dependsOn": [
-					{
-						"activity": "set page size",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"userProperties": [],
-				"typeProperties": {
-					"variableName": "max_pages",
-					"value": {
-						"value": "@string(pipeline().parameters.max_pages)",
-						"type": "Expression"
-					}
-				}
-			},
-			{
 				"name": "until max pages",
-				"description": "loop until max page limit reached",
+				"description": "loop until pages limit or max page limit reached - whichever is lowest",
 				"type": "Until",
 				"dependsOn": [
 					{
-						"activity": "set max pages",
+						"activity": "set_pages",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -60,7 +18,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@greater(int(variables('page')),int(variables('max_pages')))",
+						"value": "@or(\n  greater(\n    int(variables('page')),\n    int(variables('pages'))),\n  greater(\n    int(variables('page')),\n    int(pipeline().parameters.max_pages))\n)",
 						"type": "Expression"
 					},
 					"activities": [
@@ -81,11 +39,11 @@
 										"type": "Expression"
 									},
 									"limit": {
-										"value": "@variables('page_size')",
+										"value": "@pipeline().parameters.page_size",
 										"type": "Expression"
 									},
 									"data_type": {
-										"value": "@variables('data_type')",
+										"value": "@pipeline().parameters.data_type",
 										"type": "Expression"
 									}
 								}
@@ -136,7 +94,7 @@
 				}
 			},
 			{
-				"name": "merge user files",
+				"name": "merge data files",
 				"type": "Copy",
 				"dependsOn": [
 					{
@@ -186,7 +144,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"data_type": {
-								"value": "@variables('data_type')",
+								"value": "@pipeline().parameters.data_type",
 								"type": "Expression"
 							}
 						}
@@ -198,7 +156,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"data_type": {
-								"value": "@{variables('data_type')}/merged/",
+								"value": "@{pipeline().parameters.data_type}/merged/\n",
 								"type": "Expression"
 							}
 						}
@@ -210,7 +168,7 @@
 				"type": "Delete",
 				"dependsOn": [
 					{
-						"activity": "merge user files",
+						"activity": "merge data files",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -230,7 +188,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"data_type": {
-								"value": "@variables('data_type')",
+								"value": "@pipeline().parameters.data_type",
 								"type": "Expression"
 							}
 						}
@@ -277,9 +235,8 @@
 				}
 			},
 			{
-				"name": "set data_type",
-				"description": "set data type",
-				"type": "SetVariable",
+				"name": "get_rec_count",
+				"type": "WebActivity",
 				"dependsOn": [
 					{
 						"activity": "delete all type data",
@@ -288,11 +245,58 @@
 						]
 					}
 				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
 				"userProperties": [],
 				"typeProperties": {
-					"variableName": "data_type",
+					"url": {
+						"value": "https://jsonplaceholder.cypress.io/@{pipeline().parameters.data_type}?_start=1&_end=2\n\n",
+						"type": "Expression"
+					},
+					"method": "GET"
+				}
+			},
+			{
+				"name": "set_rec_count",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "get_rec_count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "rec_count",
 					"value": {
-						"value": "@pipeline().parameters.data_type",
+						"value": "@activity('get_rec_count').output.ADFWebActivityResponseHeaders['X-Total-Count']",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "set_pages",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "set_rec_count",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "pages",
+					"value": {
+						"value": "@string(\n\tadd(\n\t\tdiv(\n\t\t\tint(variables('rec_count')),\n\t\t\tpipeline().parameters.page_size\n\t\t),\n\t\tif(\n\t\t\tequals(\n\t\t\t\tmod(\n\t\t\t\t\tint(variables('rec_count')),\n\t\t\t\t\tpipeline().parameters.page_size\n\t\t\t\t),\n\t\t\t0),\n\t\t0,\n\t\t1\n\t\t)\n\t)\n)",
 						"type": "Expression"
 					}
 				}
@@ -301,15 +305,14 @@
 		"parameters": {
 			"page_size": {
 				"type": "int",
-				"defaultValue": 2
+				"defaultValue": 0
 			},
 			"max_pages": {
 				"type": "int",
-				"defaultValue": 2
+				"defaultValue": 0
 			},
 			"data_type": {
-				"type": "string",
-				"defaultValue": "users"
+				"type": "string"
 			}
 		},
 		"variables": {
@@ -317,20 +320,16 @@
 				"type": "String",
 				"defaultValue": "1"
 			},
-			"page_size": {
-				"type": "String",
-				"defaultValue": "1"
-			},
-			"max_pages": {
+			"pages": {
 				"type": "String",
 				"defaultValue": "1"
 			},
 			"temp_page": {
 				"type": "String"
 			},
-			"data_type": {
+			"rec_count": {
 				"type": "String",
-				"defaultValue": "users"
+				"defaultValue": "0"
 			}
 		},
 		"annotations": []
